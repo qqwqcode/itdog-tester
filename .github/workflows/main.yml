@@ -1,0 +1,35 @@
+name: Update
+
+on:
+  watch:
+    types: [started]
+  schedule:
+    - cron: "45 * * * *"
+   
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps: 
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.12
+
+    - name: Install dependencies
+      run: |
+        pip install selenium
+    
+    - name: Set up Chrome
+      uses: browser-actions/setup-chrome@v2
+      with:
+        chrome-version: 120
+        install-chromedriver: true
+    
+    - name: Build
+      run: |
+        python runtest.py
+    
