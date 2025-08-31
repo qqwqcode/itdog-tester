@@ -34,3 +34,13 @@ jobs:
       run: |
         python runtest.py
     
+    - name: Package downloaded files
+      run: |
+        ls
+        zip -r results_${{ github.run_number }}.zip ./result/
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: result-${{ github.run_number }}
+        path: results_${{ github.run_number }}.zip
