@@ -21,7 +21,8 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install selenium
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
     
     - name: Set up Chrome
       uses: browser-actions/setup-chrome@v2
