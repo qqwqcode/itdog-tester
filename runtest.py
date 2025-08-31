@@ -41,7 +41,6 @@ def setup_driver():
     
     try:
         # 在GitHub Actions中，ChromeDriver通常已经在PATH中
-        # 或者我们可以使用系统默认的chromedriver
         service = Service()
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
@@ -87,9 +86,9 @@ def run_speed_test(driver, url):
         input_field.clear()
         input_field.send_keys(url)
         
-        # 点击测速按钮
-        speed_test_button = driver.find_element(By.XPATH, "//a[@onclick=\"check_form('fast')\"]")
-        speed_test_button.click()
+        # 直接触发JavaScript事件，而不是点击按钮
+        print("直接触发测速事件...")
+        driver.execute_script("check_form('fast')")
         
         print("测速中，请等待10秒...")
         
