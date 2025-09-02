@@ -1,6 +1,8 @@
 import time
 import os
 import json
+import random
+import string
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -11,9 +13,128 @@ from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # 配置参数
-REFRESH_INTERVAL = 12  # 刷新间隔（秒）
-TOTAL_REFRESH_COUNT = 100  # 总刷新次数
+REFRESH_INTERVAL = 2  # 刷新间隔（秒）
+TOTAL_REFRESH_COUNT = 160  # 总刷新次数
 WAIT_AFTER_TEST = 18  # 每次测速后等待时间（秒）
+
+# 基础User-Agent模板列表
+USER_AGENT_TEMPLATES = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{version} Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{version} Safari/537.36 Edg/{edge_version}",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:{firefox_version}.0) Gecko/20100101 Firefox/{firefox_version}.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_{mac_version}_{mac_patch}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{version} Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_{mac_version}_{mac_patch}) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/{safari_version} Safari/605.1.15",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{version} Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS {ios_version} like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/{safari_version} Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (iPad; CPU OS {ios_version} like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/{safari_version} Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (Linux; Android {android_version}; {device_model}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{version} Mobile Safari/537.36",
+    "Mozilla/5.0 (Linux; Android {android_version}; {device_model}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{version} Safari/537.36"
+]
+
+def generate_random_version():
+    """生成随机版本号"""
+    major = random.randint(100, 130)
+    minor = random.randint(0, 9)
+    patch = random.randint(0, 9999)
+    return f"{major}.{minor}.{patch}"
+
+def generate_random_chrome_version():
+    """生成随机Chrome版本号"""
+    major = random.randint(115, 125)
+    minor = random.randint(0, 9)
+    patch = random.randint(0, 9999)
+    return f"{major}.{minor}.{patch}"
+
+def generate_random_firefox_version():
+    """生成随机Firefox版本号"""
+    major = random.randint(100, 121)
+    minor = random.randint(0, 9)
+    return f"{major}.{minor}"
+
+def generate_random_safari_version():
+    """生成随机Safari版本号"""
+    major = random.randint(14, 17)
+    minor = random.randint(0, 9)
+    patch = random.randint(0, 9)
+    return f"{major}.{minor}.{patch}"
+
+def generate_random_ios_version():
+    """生成随机iOS版本号"""
+    major = random.randint(14, 17)
+    minor = random.randint(0, 9)
+    patch = random.randint(0, 9)
+    return f"{major}_{minor}_{patch}"
+
+def generate_random_android_version():
+    """生成随机Android版本号"""
+    major = random.randint(10, 14)
+    minor = random.randint(0, 9)
+    return f"{major}"
+
+def generate_random_mac_version():
+    """生成随机macOS版本号"""
+    major = random.randint(14, 16)
+    minor = random.randint(0, 9)
+    patch = random.randint(0, 9)
+    return f"{major}_{minor}_{patch}"
+
+def generate_random_device_model():
+    """生成随机设备型号"""
+    prefixes = ["SM-", "Pixel ", "iPhone", "iPad", "Mi ", "Redmi ", "OnePlus "]
+    models = ["G991B", "S928U", "12 Pro", "13 Mini", "9", "10", "11", "12", "Note 10", "S21", "S22"]
+    numbers = ["", str(random.randint(1, 20)), f"{random.randint(1, 9)}T"]
+    
+    return f"{random.choice(prefixes)}{random.choice(models)}{random.choice(numbers)}"
+
+def generate_random_build_id():
+    """生成随机构建ID"""
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+def generate_random_user_agent():
+    """生成带有随机字符的User-Agent"""
+    template = random.choice(USER_AGENT_TEMPLATES)
+    
+    # 生成随机参数
+    params = {
+        'version': generate_random_chrome_version(),
+        'edge_version': generate_random_version(),
+        'firefox_version': generate_random_firefox_version(),
+        'safari_version': generate_random_safari_version(),
+        'ios_version': generate_random_ios_version(),
+        'android_version': generate_random_android_version(),
+        'device_model': generate_random_device_model(),
+        'mac_version': generate_random_mac_version(),
+        'mac_patch': random.randint(0, 9)
+    }
+    
+    # 应用参数到模板
+    user_agent = template.format(**params)
+    
+    # 添加随机字符到User-Agent的不同位置
+    if random.random() < 0.7:  # 70%的概率添加额外信息
+        extra_info = [
+            f" Build/{generate_random_build_id()}",
+            f" Revision/{random.randint(1000, 9999)}",
+            f" AppleWebKit/{generate_random_version()}",
+            f" KHTML/{generate_random_version()}",
+            f" like Gecko",
+            f" Mobile",
+            f" Tablet",
+            f" Desktop"
+        ]
+        
+        # 随机选择1-3个额外信息
+        num_extras = random.randint(1, 3)
+        selected_extras = random.sample(extra_info, num_extras)
+        user_agent += ''.join(selected_extras)
+    
+    # 随机添加一些特殊字符（小概率）
+    if random.random() < 0.2:
+        special_chars = ['_', '-', '.', '+']
+        insert_pos = random.randint(len(user_agent) // 2, len(user_agent) - 1)
+        user_agent = user_agent[:insert_pos] + random.choice(special_chars) + user_agent[insert_pos:]
+    
+    return user_agent
 
 def ensure_result_directory():
     """确保结果目录存在"""
@@ -54,6 +175,11 @@ def setup_driver():
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option('useAutomationExtension', False)
     
+    # 设置随机User-Agent
+    user_agent = generate_random_user_agent()
+    chrome_options.add_argument(f'--user-agent={user_agent}')
+    print(f"设置浏览器User-Agent: {user_agent[:80]}...")
+    
     try:
         service = Service()
         driver = webdriver.Chrome(service=service, options=chrome_options)
@@ -80,6 +206,27 @@ def wait_for_test_completion(driver, timeout=60):
         print(f"等待测速完成时出错: {str(e)}")
         return False
 
+def set_random_user_agent_in_input(driver):
+    """在id为'ua'的输入框中设置随机User-Agent"""
+    try:
+        # 等待输入框加载完成
+        ua_input = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "ua"))
+        )
+        
+        # 清空输入框并输入随机User-Agent
+        ua_input.clear()
+        random_ua = generate_random_user_agent()
+        ua_input.send_keys(random_ua)
+        print(f"已设置随机User-Agent: {random_ua[:80]}...")
+        return True
+    except TimeoutException:
+        print("警告：未找到id为'ua'的User-Agent输入框，继续测试...")
+        return False
+    except Exception as e:
+        print(f"设置User-Agent时出错: {str(e)}")
+        return False
+
 def run_speed_test(driver, url):
     """对单个URL运行测速测试"""
     try:
@@ -92,6 +239,9 @@ def run_speed_test(driver, url):
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.ID, "host"))
         )
+        
+        # 设置随机User-Agent
+        set_random_user_agent_in_input(driver)
         
         # 清空输入框并输入URL
         input_field = driver.find_element(By.ID, "host")
