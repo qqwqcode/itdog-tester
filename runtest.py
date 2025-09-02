@@ -207,22 +207,94 @@ def wait_for_test_completion(driver, timeout=60):
         return False
 
 def set_random_user_agent_in_input(driver):
-    """在id为'ua'的输入框中设置随机User-Agent"""
+    """使用JavaScript强制为UA输入框设置随机User-Agent"""
     try:
-        # 等待输入框加载完成
-        ua_input = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, "ua"))
-        )
-        
-        # 清空输入框并输入随机User-Agent
-        ua_input.clear()
+        # 生成随机User-Agent
         random_ua = generate_random_user_agent()
-        ua_input.send_keys(random_ua)
-        print(f"已设置随机User-Agent: {random_ua[:80]}...")
-        return True
-    except TimeoutException:
-        print("警告：未找到id为'ua'的User-Agent输入框，继续测试...")
-        return False
+        print(f"生成的随机User-Agent: {random_ua[:80]}...")
+        
+        # 使用JavaScript强制设置UA输入框的值
+        js_script = f"""
+        // 尝试通过ID查找元素
+        var uaInput = document.getElementById('ua');
+        if (uaInput) {{
+            uaInput.value = '{random_ua}';
+            console.log('通过ID设置UA成功');
+            return true;
+        }}
+        
+        // 如果还找不到，尝试通过placeholder或标签文本查找
+        var inputs = document.querySelectorAll('input');
+        for (var i = 0; i < inputs.length; i++) {{
+            var input = inputs[i];
+            if (input.type === 'text' && input.id.toLowerCase().includes('ua')) {{
+                input.value = '{random_ua}';
+                console.log('通过ID包含ua设置UA成功');
+                return true;
+            }}
+            if (input.name && input.name.toLowerCase().includes('ua')) {{
+                input.value = '{random_ua}';
+                console.log('通过name包含ua设置UA成功');
+                return true;
+            }}
+        }}
+        
+        // 最后尝试通过表单字段查找
+        var labels = document.querySelectorAll('label');
+        for (var i = 0; i < labels.length; i++) {{
+            if (labels[i].textContent && labels[i].textContent.toLowerCase().includes('user-agent')) {{
+                var forId = labels[i].getAttribute('for');
+                if (forId) {{
+                    uaInput = document.getElementById(forId);
+                    if (uaInput) {{
+                        uaInput.value = '{random_ua}';
+                        console.log('通过label关联设置UA成功');
+                        return true;
+                    }}
+                }}
+            }}
+        }}
+        
+        console.log('未找到UA输入框');
+        return false;
+        """
+        
+        # 执行JavaScript
+        result = driver.execute_script(js_script)
+        
+        if result:
+            print("成功通过JavaScript设置User-Agent")
+            return True
+        else:
+            print("警告：JavaScript未找到UA输入框，尝试备用方法...")
+            # 备用方法：尝试直接通过选择器设置
+            try:
+                # 尝试多种可能的选择器
+                selectors = [
+                    '#ua',
+                    'input[name="ua"]',
+                    'input[placeholder*="user-agent" i]',
+                    'input[placeholder*="ua" i]',
+                    'input[id*="ua" i]',
+                    'input[name*="ua" i]'
+                ]
+                
+                for selector in selectors:
+                    try:
+                        ua_input = driver.find_element(By.CSS_SELECTOR, selector)
+                        driver.execute_script(f"arguments[0].value = '{random_ua}';", ua_input)
+                        print(f"通过选择器 {selector} 设置UA成功")
+                        return True
+                    except:
+                        continue
+                
+                print("所有备用方法都失败，继续测试...")
+                return False
+                
+            except Exception as e:
+                print(f"备用方法设置UA时出错: {str(e)}")
+                return False
+                
     except Exception as e:
         print(f"设置User-Agent时出错: {str(e)}")
         return False
