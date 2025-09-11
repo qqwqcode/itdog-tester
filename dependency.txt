@@ -1,3 +1,4 @@
-https://maown.com/
-https://maown.com/c/news/28.json
-https://maown.com/search?q=%E6%96%B0%E9%97%BB&page=1
+https://new.shuliko.com/api/videos/inc_views
+https://new.shuliko.com/api/videos/banner_video
+https://new.shuliko.com/api/category/category_list
+https://new.shuliko.com/api/videos/video_list
