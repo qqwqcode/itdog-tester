@@ -14,8 +14,8 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 # 配置参数
 REFRESH_INTERVAL = 1  # 刷新间隔（秒）
-TOTAL_REFRESH_COUNT = 100  # 总刷新次数
-WAIT_AFTER_TEST = 9  # 每次测速后等待时间（秒）
+TOTAL_REFRESH_COUNT = 200  # 总刷新次数
+WAIT_AFTER_TEST = 4  # 每次测速后等待时间（秒）
 
 # 基础User-Agent模板列表
 USER_AGENT_TEMPLATES = [
